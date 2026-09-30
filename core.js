@@ -1501,14 +1501,28 @@ async function initScheduler() {
     if (typeof Tapp === "undefined" || !Tapp.scheduler || typeof Tapp.scheduler.register !== "function") return;
     const role = await getRole();
     if (role !== "admin") return;
-    await Tapp.scheduler.register({
-      taskId: SYNC_TASK_ID,
-      name: "原神数据定时刷新",
-      scheduleType: "cron",
-      schedule: { cron: SYNC_CRON },
-      executionTarget: "frontend",
-      missedPolicy: "run-once",
-    });
+    let alreadyRegistered = false;
+    if (typeof Tapp.scheduler.get === "function") {
+      try {
+        alreadyRegistered = Boolean(await Tapp.scheduler.get(SYNC_TASK_ID));
+      } catch (err) {
+        alreadyRegistered = false;
+      }
+    }
+    if (!alreadyRegistered) {
+      try {
+        await Tapp.scheduler.register({
+          taskId: SYNC_TASK_ID,
+          name: "原神数据定时刷新",
+          scheduleType: "cron",
+          schedule: { cron: SYNC_CRON },
+          executionTarget: "frontend",
+          missedPolicy: "run-once",
+        });
+      } catch (err) {
+        /* ignore */
+      }
+    }
     if (typeof Tapp.scheduler.onTask === "function") {
       Tapp.scheduler.onTask(SYNC_TASK_ID, async function () {
         try {
