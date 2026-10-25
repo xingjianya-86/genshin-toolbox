@@ -516,6 +516,9 @@ function renderTabs() {
 }
 
 function renderAll() {
+  // 手动刷新/初始化走这条路径：渲染完即同步签名，
+  // 否则随后的 onChanged 会因签名落后而多跑一轮重建。
+  state.cacheSig = cacheSignature(state.cache || {});
   renderProfile();
   renderCards();
   renderChars();

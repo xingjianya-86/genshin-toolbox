@@ -48,8 +48,11 @@ function buildFallback(container, widgetId, size) {
 function setupRoot(container, props, widgetId) {
   const size = props && props.size ? String(props.size) : "2x2";
   const root = container.querySelector("[data-widget-root]") || buildFallback(container, widgetId, size);
-  const scale = (props && props.scale) || 1;
-  root.style.setProperty("--gtw-scale", String(scale));
+  // 宿主 render 之后才下发真实缩放（props.scale 在 render 时恒为 1）：
+  // 只有非 1 的显式值才内联覆盖，否则交给 CSS 回落宿主 --tapp-scale。
+  const scale = (props && props.scale) || 0;
+  if (scale && scale !== 1) root.style.setProperty("--gtw-scale", String(scale));
+  else root.style.removeProperty("--gtw-scale");
   root.classList.toggle("gtw-edit", Boolean(props && props.isEditMode));
   core.noteWidgetProps(widgetId, props);
   return root;
